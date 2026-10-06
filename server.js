@@ -26,6 +26,8 @@ const MIME_TYPES = {
   '.webp': 'image/webp',
 };
 
+const PRIVATE_FILES = new Set(['server.js', 'main.js', 'config.js', 'cli-options.js', 'env-options.js']);
+
 async function fbFetch(endpoint) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 25000);
@@ -178,8 +180,8 @@ const server = http.createServer(async (request, response) => {
   if (request.method === 'GET') {
     const requestedPath = pathname === '/' ? '/index.html' : pathname;
     const filePath = path.resolve(__dirname, `.${requestedPath}`);
-    if (filePath.startsWith(__dirname) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      const extension = path.extname(filePath).toLowerCase();
+    const extension = path.extname(filePath).toLowerCase();
+    if (filePath.startsWith(__dirname + path.sep) && MIME_TYPES[extension] && !PRIVATE_FILES.has(path.basename(filePath)) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       response.statusCode = 200;
       response.setHeader('Content-Type', MIME_TYPES[extension] || 'application/octet-stream');
       response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
